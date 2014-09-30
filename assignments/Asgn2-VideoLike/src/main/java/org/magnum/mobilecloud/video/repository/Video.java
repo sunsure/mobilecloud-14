@@ -2,6 +2,9 @@ package org.magnum.mobilecloud.video.repository;
 
 import com.google.common.base.Objects;
 
+import javax.persistence.*;
+import java.util.Set;
+
 /**
  * A simple object to represent a video and its URL for viewing.
  * 
@@ -16,16 +19,22 @@ import com.google.common.base.Objects;
  * 
  * @author mitchell
  */
+@Entity
 public class Video {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
 	private String name;
 	private String url;
 	private long duration;
 	private long likes;
-	
-	public Video() {
+
+    @ElementCollection
+    private Set<String> userLikes;
+
+    public Video() {
 	}
 
 	public Video(String name, String url, long duration, long likes) {
@@ -75,6 +84,46 @@ public class Video {
 	public void setLikes(long likes) {
 		this.likes = likes;
 	}
+
+    public Set<String> getUserLikes() {
+        return userLikes;
+    }
+
+    /**
+     * Likes this video on behalf of the user provided.
+     *
+     * @param user the user liking this video.
+     * @return <b>true</b> if the user successfully liked this video.<br/>
+     *         <b>false</b> if the user already liked this video, or the provided user is null.
+     */
+    public boolean likeVideo(String user) {
+        if (user != null) {
+            if (userLikes.add(user)) {
+                likes++;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Unlikes this video on behalf of the user provided.
+     *
+     * @param user the user unliking this video.
+     * @return <b>true</b> if the user successfully unliked this video.<br/>
+     *         <b>false</b> if the user never liked this video to begin with, or the provided user is null.
+     */
+    public boolean unlikeVideo(String user) {
+        if (user != null) {
+            if (userLikes.remove(user)) {
+                likes--;
+                return true;
+            }
+        }
+
+        return false;
+    }
 	
 	/**
 	 * Two Videos will generate the same hashcode if they have exactly the same
